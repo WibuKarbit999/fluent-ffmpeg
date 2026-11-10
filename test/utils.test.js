@@ -2,7 +2,7 @@
 /*global describe,it*/
 'use strict';
 
-var utils = require('../lib/utils');
+import { args, timemarkToSeconds, linesRing } from '../lib/utils.js';
 
 describe('Utilities', function() {
 

@@ -2,9 +2,9 @@
 /*global describe,it*/
 'use strict';
 
-var Ffmpeg = require('../index');
+import Ffmpeg from '../index.js';
 
-var aliases = {
+const aliases = {
   audio: {
     withNoAudio: ['noAudio'],
     withAudioCodec: ['audioCodec'],

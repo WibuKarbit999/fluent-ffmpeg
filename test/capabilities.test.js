@@ -2,14 +2,15 @@
 /*global describe,it,beforeEach,afterEach,after*/
 'use strict';
 
-var Ffmpeg = require('../index'),
-  path = require('path'),
-  assert = require('assert'),
-  testhelper = require('./helpers'),
-  async = require('async');
+import Ffmpeg from '../index.js';
+import { join, dirname, delimiter } from 'path';
+import assert from 'assert';
+import { TestHelpers } from './helpers.js';
+import async from 'async';
+import { platform } from 'os';
 
 // delimiter fallback for node 0.8
-var PATH_DELIMITER = path.delimiter || (require('os').platform().match(/win(32|64)/) ? ';' : ':');
+const PATH_DELIMITER = delimiter || (platform().match(/win(32|64)/) ? ';' : ':');
 
 
 describe('Capabilities', function() {

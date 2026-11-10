@@ -1,13 +1,13 @@
 /*jshint node:true*/
 'use strict';
 
-var TestHelpers;
+import { platform } from 'os';
 
-exports = module.exports = TestHelpers = {
+export const TestHelpers = {
   getFfmpegCheck: function() {
-    var platform = require('os').platform();
+    const platformName = platform();
 
-    if (!platform.match(/win(32|64)/)) {
+    if (!platformName.match(/win(32|64)/)) {
       // linux/mac, use which
       return 'which ffmpeg';
     } else {

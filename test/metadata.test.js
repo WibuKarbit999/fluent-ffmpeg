@@ -2,13 +2,13 @@
 /*global describe,it,before*/
 'use strict';
 
-var Ffmpeg = require('../index'),
-  path = require('path'),
-  fs = require('fs'),
-  Readable = require('stream').Readable,
-  assert = require('assert'),
-  exec = require('child_process').exec,
-  testhelper = require('./helpers');
+import Ffmpeg from '../index.js';
+import { join, dirname } from 'path';
+import fs from 'fs';
+import { Readable } from 'stream';
+import assert from 'assert';
+import { exec } from 'child_process';
+import { TestHelpers } from './helpers.js';
 
 
 describe('Metadata', function() {

@@ -2,16 +2,16 @@
 /*global describe,it,before*/
 'use strict';
 
-var Ffmpeg = require('../index'),
-  utils = require('../lib/utils'),
-  path = require('path'),
-  fs = require('fs'),
-  assert = require('assert'),
-  exec = require('child_process').exec,
-  testhelper = require('./helpers');
+import Ffmpeg from '../index.js';
+import { makeFilterStrings } from '../lib/utils.js';
+import { join, dirname } from 'path';
+import fs from 'fs';
+import assert from 'assert';
+import { exec } from 'child_process';
+import { TestHelpers } from './helpers.js';
 
 Ffmpeg.prototype._test_getArgs = function(callback) {
-  var args;
+  const args;
 
   try {
     args = this._getArguments();
@@ -23,7 +23,7 @@ Ffmpeg.prototype._test_getArgs = function(callback) {
 };
 
 Ffmpeg.prototype._test_getSizeFilters = function() {
-  return utils.makeFilterStrings(this._currentOutput.sizeFilters.get())
+  return makeFilterStrings(this._currentOutput.sizeFilters.get())
     .concat(this._currentOutput.videoFilters.get());
 };
 

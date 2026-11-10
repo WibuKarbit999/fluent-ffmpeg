@@ -2,53 +2,53 @@
 /*global describe,it,before,after,beforeEach,afterEach*/
 'use strict';
 
-var FfmpegCommand = require('../index'),
-  path = require('path'),
-  fs = require('fs'),
-  assert = require('assert'),
-  os = require('os').platform(),
-  exec = require('child_process').exec,
-  spawn = require('child_process').spawn,
-  async = require('async'),
-  stream = require('stream'),
-  testhelper = require('./helpers');
+import FfmpegCommand from '../index.js';
+import { join, dirname } from 'path';
+import fs from 'fs';
+import assert from 'assert';
+import { platform } from 'os';
+import { exec } from 'child_process';
+import { spawn } from 'child_process';
+import async from 'async';
+import { Readable, Writable, PassThrough } from 'stream';
+import { TestHelpers } from './helpers.js';
 
 
-var testHTTP = 'http://127.0.0.1:8090/test.mpg';
-var testRTSP = 'rtsp://127.0.0.1:5540/test-rtp.mpg';
-var testRTPOut = 'rtp://127.0.0.1:5540/input.mpg';
+const testHTTP = 'http://127.0.0.1:8090/test.mpg';
+const testRTSP = 'rtsp://127.0.0.1:5540/test-rtp.mpg';
+const testRTPOut = 'rtp://127.0.0.1:5540/input.mpg';
 
 
 /*****************************************************************
 
-              IMPORTANT NOTE ABOUT PROCESSOR TESTS
+               IMPORTANT NOTE ABOUT PROCESSOR TESTS
 
  To ensure tests run reliably, you should do the following:
 
- * Any input file you use must be tested for existence before
-   running the tests.  Use the 'prerequisite' function below and
-   add any new file there.
+  * Any input file you use must be tested for existence before
+    running the tests.  Use the 'prerequisite' function below and
+    add any new file there.
 
- * FfmpegCommands should be created using 'this.getCommand(args)'
-   in the test definition, not using 'new Ffmpegcommand(args)'.
-   This enables ensuring the command is finished before starting
-   the next test.
+  * FfmpegCommands should be created using 'this.getCommand(args)'
+    in the test definition, not using 'new Ffmpegcommand(args)'.
+    This enables ensuring the command is finished before starting
+    the next test.
 
- * Any file your test is expected to create should have their full
-   path pushed to the 'this.files' array in the test definition,
-   and your test should *not* remove them on completion.  The
-   cleanup hook will check all those files for existence and remove
-   them.
+  * Any file your test is expected to create should have their full
+    path pushed to the 'this.files' array in the test definition,
+    and your test should *not* remove them on completion.  The
+    cleanup hook will check all those files for existence and remove
+    them.
 
- * Same thing with directories in the 'this.dirs' array.
+  * Same thing with directories in the 'this.dirs' array.
 
- * If you use intervals or timeouts, please ensure they have been
-   canceled (for intervals) or called (for timeouts) before
-   calling the test 'done()' callback.
+  * If you use intervals or timeouts, please ensure they have been
+    canceled (for intervals) or called (for timeouts) before
+    calling the test 'done()' callback.
 
- Not abiding by those rules is BAD.  You have been warned :)
+  Not abiding by those rules is BAD.  You have been warned :)
 
- *****************************************************************/
+  *****************************************************************/
 
 
 describe('Processor', function() {
@@ -281,7 +281,7 @@ describe('Processor', function() {
 
     it('should not keep node process running on completion', function(done) {
       var script = `
-        var ffmpeg = require('.');
+        import ffmpeg from '.';
         ffmpeg('${this.testfilebig}', { timeout: 60 })
           .addOption('-t', 1)
           .addOption('-f', 'null')
@@ -786,7 +786,7 @@ describe('Processor', function() {
       var testFile = path.join(__dirname, 'assets', 'testConvertFromStream.avi')
 
 		const readError = new Error('Read Error')
-      const instream = new (require('stream').Readable)({
+      const instream = new (Readable)({
         read() {
   		    process.nextTick(() => this.emit('error', readError))
 		  }
@@ -968,7 +968,7 @@ describe('Processor', function() {
     it('should pass output stream errors through to error handler', function(done) {
 
 		const writeError = new Error('Write Error')
-      const outstream = new (require('stream').Writable)({
+      const outstream = new (Writable)({
         write(chunk, encoding, callback) {
           callback(writeError)
 		  }
