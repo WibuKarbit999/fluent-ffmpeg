@@ -1,2 +1,7 @@
-node_modules/
-.env
+*.project
+node_modules
+.nyc_output
+*.swp
+.idea
+*.iml
+coverage
