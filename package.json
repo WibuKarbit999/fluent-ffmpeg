@@ -6,25 +6,15 @@
     "name": "WibuKarbit999",
     "url": "https://github.com/WibuKarbit999"
   },
-  "contributors": [
-    {
-      "name": "Stefan Schaermeli",
-      "email": "schaermu@gmail.com"
-    },
-    {
-      "name": "Felix Fichte",
-      "email": "spruce@space-ships.de"
-    }
-  ],
   "license": "MIT",
   "type": "module",
-  "main": "./index.js",
+  "main": "index.js",
   "files": [
     "lib/",
     "index.js"
   ],
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
   "scripts": {
     "test": "NODE_ENV=test mocha --require should --reporter spec",
@@ -33,7 +23,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/WibuKarbit999/fluent-ffmpeg-ts.git"
+    "url": "git+https://github.com/WibuKarbit999/fluent-ffmpeg.git"
   },
   "dependencies": {
     "async": "^3.2.6",
