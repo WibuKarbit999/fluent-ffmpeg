@@ -22,7 +22,7 @@
     "index.d.ts"
   ],
   "engines": {
-    "node": ">=20"
+    "node": ">=18"
   },
   "scripts": {
     "test": "NODE_ENV=test mocha --require should --reporter spec",
