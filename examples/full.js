@@ -1,7 +1,7 @@
-var ffmpeg = require('../index');
+import ffmpeg from '../index.js';
 
 // make sure you set the correct path to your video file
-var proc = ffmpeg('/path/to/your_movie.avi')
+const proc = ffmpeg('/path/to/your_movie.avi')
   // set video bitrate
   .videoBitrate(1024)
   // set target codec
@@ -23,10 +23,10 @@ var proc = ffmpeg('/path/to/your_movie.avi')
   // set output format to force
   .format('avi')
   // setup event handlers
-  .on('end', function() {
+  .on('end', () => {
     console.log('file has been converted succesfully');
   })
-  .on('error', function(err) {
+  .on('error', (err) => {
     console.log('an error happened: ' + err.message);
   })
   // save to file

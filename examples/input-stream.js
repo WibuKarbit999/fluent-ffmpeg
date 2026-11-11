@@ -1,22 +1,25 @@
-var fs = require('fs'),
-  ffmpeg = require('../index');
+import fs from 'fs';
+import ffmpeg from '../index.js';
+import { fileURLToPath } from 'url';
+
+const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
 // open input stream
-var infs = fs.createReadStream(__dirname + '/test/assets/testvideo-43.avi');
+const infs = fs.createReadStream(__dirname + '../test/assets/testvideo-43.avi');
 
-infs.on('error', function(err) {
+infs.on('error', (err) => {
   console.log(err);
 });
 
 // create new ffmpeg processor instance using input stream
 // instead of file path (can be any ReadableStream)
-var proc = ffmpeg(infs)
+const proc = ffmpeg(infs)
   .preset('flashvideo')
   // setup event handlers
-  .on('end', function() {
+  .on('end', () => {
     console.log('done processing input stream');
   })
-  .on('error', function(err) {
+  .on('error', (err) => {
     console.log('an error happened: ' + err.message);
   })
   // save to file

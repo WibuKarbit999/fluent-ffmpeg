@@ -1,18 +1,18 @@
-var ffmpeg = require('../index'),
-  fs = require('fs');
+import ffmpeg from '../index.js';
+import fs from 'fs';
 
 // create the target stream (can be any WritableStream)
-var stream = fs.createWriteStream('/path/to/yout_target.flv')
+const stream = fs.createWriteStream('/path/to/yout_target.flv')
 
 // make sure you set the correct path to your video file
-var proc = ffmpeg('/path/to/your_movie.avi')
+const proc = ffmpeg('/path/to/your_movie.avi')
   // use the 'flashvideo' preset (located in /lib/presets/flashvideo.js)
   .preset('flashvideo')
   // setup event handlers
-  .on('end', function() {
+  .on('end', () => {
     console.log('file has been converted succesfully');
   })
-  .on('error', function(err) {
+  .on('error', (err) => {
     console.log('an error happened: ' + err.message);
   })
   // save to stream

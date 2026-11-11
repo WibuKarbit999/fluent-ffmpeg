@@ -1,4 +1,4 @@
-var ffmpeg = require('../index');
+import ffmpeg from '../index.js';
 
 /*
  replicates this sequence of commands:
@@ -12,20 +12,20 @@ var ffmpeg = require('../index');
  These files are created by filename pattern like [videoFilename.ext].temp.mpg [outputFilename.ext].temp.merged.mp4
  */
 
-var firstFile = "title.mp4";
-var secondFile = "source.mp4";
-var thirdFile = "third.mov";
-var outPath = "out.mp4";
+const firstFile = "title.mp4";
+const secondFile = "source.mp4";
+const thirdFile = "third.mov";
+const outPath = "out.mp4";
 
-var proc = ffmpeg(firstFile)
+const proc = ffmpeg(firstFile)
     .input(secondFile)
     .input(thirdFile)
     //.input(fourthFile)
     //.input(...)
-    .on('end', function() {
+    .on('end', () => {
       console.log('files have been merged succesfully');
     })
-    .on('error', function(err) {
+    .on('error', (err) => {
       console.log('an error happened: ' + err.message);
     })
     .mergeToFile(outPath);

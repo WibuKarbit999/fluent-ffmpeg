@@ -1,11 +1,13 @@
 # Fluent ffmpeg-API for node.js
 
+> **Pemberitahuan / Notice**
+>
+> Ini adalah fork dari [node-fluent-ffmpeg](https://github.com/fluent-ffmpeg/node-fluent-ffmpeg). Saya (WibuKarbit999) **hanya mengubah sintaks JavaScript lama (CommonJS) menjadi standar ESM** dan **memperbaiki beberapa bug**. Fitur dan API-nya tidak diubah, dan seluruh hak cipta tetap milik penulis aslinya (lihat bagian [License](#license)).
+>
+> This is a fork of [node-fluent-ffmpeg](https://github.com/fluent-ffmpeg/node-fluent-ffmpeg). I (WibuKarbit999) **only converted the old JavaScript syntax (CommonJS) to the ESM standard** and **fixed a few bugs**. Features and API are unchanged, and all copyright remains with the original authors (see [License](#license)).
+
 [![Coverage Status](https://coveralls.io/repos/github/fluent-ffmpeg/node-fluent-ffmpeg/badge.svg?branch=master)](https://coveralls.io/github/fluent-ffmpeg/node-fluent-ffmpeg?branch=master)
 [![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Ffluent-ffmpeg%2Fnode-fluent-ffmpeg.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Ffluent-ffmpeg%2Fnode-fluent-ffmpeg?ref=badge_shield)
-
-## Fluent-ffmpeg is now deprecated
-
-This library is **no longer maintained** and no longer works properly with recent ffmpeg versions. Use it as your own risk, this repository is readonly and does not accept issues or PRs.
 
 ## About
 
@@ -19,12 +21,20 @@ This library abstracts the complex command-line usage of ffmpeg into a fluent, e
 Via npm:
 
 ```sh
-$ npm install fluent-ffmpeg
+npm install fluent-ffmpeg
 ```
+
+This package is **ESM-only** and requires Node.js >= 18. Use `import` instead of `require()`:
+
+```js
+import ffmpeg from 'fluent-ffmpeg';
+```
+
+If your project still uses CommonJS, load it with a dynamic import: `const { default: ffmpeg } = await import('fluent-ffmpeg');`
 
 Or as a submodule:
 ```sh
-$ git submodule add git://github.com/schaermu/node-fluent-ffmpeg.git vendor/fluent-ffmpeg
+git submodule add git://github.com/schaermu/node-fluent-ffmpeg.git vendor/fluent-ffmpeg
 ```
 
 
@@ -48,10 +58,6 @@ Most features should work when using avconv and avprobe instead of ffmpeg and ff
 
 **Debian/Ubuntu users**: the official repositories have the ffmpeg/ffprobe executable in the `libav-tools` package, and they are actually rebranded avconv/avprobe executables (avconv is a fork of ffmpeg).  They should be mostly compatible, but should you encounter any issue, you may want to use the real ffmpeg instead.  You can either compile it from source or find a pre-built .deb package at https://ffmpeg.org/download.html (For Ubuntu, the `ppa:mc3man/trusty-media` PPA provides recent builds).
 
-#### flvtool2 or flvmeta
-
-If you intend to encode FLV videos, you must have either flvtool2 or flvmeta installed and in your `PATH` or fluent-ffmpeg won't be able to produce streamable output files.  If you set either the `FLVTOOL2_PATH` or `FLVMETA_PATH`, fluent-ffmpeg will try to use it instead of searching in the `PATH`.
-
 #### Setting binary paths manually
 
 Alternatively, you may set the ffmpeg, ffprobe and flvtool2/flvmeta binary paths manually by using the following API commands:
@@ -66,24 +72,28 @@ Alternatively, you may set the ffmpeg, ffprobe and flvtool2/flvmeta binary paths
 The fluent-ffmpeg module returns a constructor that you can use to instanciate FFmpeg commands.
 
 ```js
-var FfmpegCommand = require('fluent-ffmpeg');
-var command = new FfmpegCommand();
+import FfmpegCommand from 'fluent-ffmpeg';
+
+const command = new FfmpegCommand();
 ```
 
 You can also use the constructor without the `new` operator.
 
 ```js
-var ffmpeg = require('fluent-ffmpeg');
-var command = ffmpeg();
+import ffmpeg from 'fluent-ffmpeg';
+
+const command = ffmpeg();
 ```
 
 You may pass an input file name or readable stream, a configuration object, or both to the constructor.
 
 ```js
-var command = ffmpeg('/path/to/file.avi');
-var command = ffmpeg(fs.createReadStream('/path/to/file.avi'));
-var command = ffmpeg({ option: "value", ... });
-var command = ffmpeg('/path/to/file.avi', { option: "value", ... });
+import fs from 'node:fs';
+
+const command = ffmpeg('/path/to/file.avi');
+const command = ffmpeg(fs.createReadStream('/path/to/file.avi'));
+const command = ffmpeg({ option: "value", ... });
+const command = ffmpeg('/path/to/file.avi', { option: "value", ... });
 ```
 
 The following options are available:
@@ -551,7 +561,9 @@ Adding an output switches the "current output" of the command, so that any fluen
 Also note that when calling `output()`, you should not use the `save()` or `stream()` (formerly `saveToFile()` and `writeToStream()`) methods, as they already add an output.  Use the `run()` method to start processing.
 
 ```js
-var stream  = fs.createWriteStream('outputfile.divx');
+import fs from 'node:fs';
+
+const stream = fs.createWriteStream('outputfile.divx');
 
 ffmpeg('/path/to/file.avi')
   .output('outputfile.mp4')
@@ -687,7 +699,7 @@ ffmpeg('/path/to/file.avi').preset('divx');
 ffmpeg('/path/to/file.avi', { presets: '/my/presets' }).preset('foo');
 ```
 
-Preset modules must export a `load()` function that takes an FfmpegCommand as an argument.   fluent-ffmpeg comes with the following preset modules preinstalled:
+Preset modules must export a `load()` function (`export function load(ffmpeg) { ... }`) that takes an FfmpegCommand as an argument. Custom preset folders are loaded with `require()`, so on Node.js older than 22.12 they must be CommonJS files; for ESM-only projects, prefer preset functions (below).   fluent-ffmpeg comes with the following preset modules preinstalled:
 
 * `divx`
 * `flashvideo`
@@ -696,7 +708,7 @@ Preset modules must export a `load()` function that takes an FfmpegCommand as an
 Here is the code from the included `divx` preset as an example:
 
 ```js
-exports.load = function(ffmpeg) {
+export function load(ffmpeg) {
   ffmpeg
     .format('avi')
     .videoBitrate('1024k')
@@ -706,7 +718,7 @@ exports.load = function(ffmpeg) {
     .audioChannels(2)
     .audioCodec('libmp3lame')
     .outputOptions(['-vtag DIVX']);
-};
+}
 ```
 
 The second kind of preset is preset functions.  To use those, pass a function which takes an FfmpegCommand as a parameter.
@@ -913,7 +925,7 @@ Note: the `save()` method is actually syntactic sugar for calling both `output()
 Starts processing and pipes ffmpeg output to a writable stream.  The `options` argument, if present, is passed to ffmpeg output stream's `pipe()` method (see nodejs documentation).
 
 ```js
-var outStream = fs.createWriteStream('/path/to/output.mp4');
+const outStream = fs.createWriteStream('/path/to/output.mp4');
 
 ffmpeg('/path/to/file.avi')
   .videoCodec('libx264')
@@ -933,7 +945,7 @@ When no `stream` argument is present, the `pipe()` method returns a PassThrough 
 **Note**: this is only available with node >= 0.10.
 
 ```js
-var command = ffmpeg('/path/to/file.avi')
+const command = ffmpeg('/path/to/file.avi')
   .videoCodec('libx264')
   .audioCodec('libmp3lame')
   .size('320x240')
@@ -944,7 +956,7 @@ var command = ffmpeg('/path/to/file.avi')
     console.log('Processing finished !');
   });
 
-var ffstream = command.pipe();
+const ffstream = command.pipe();
 ffstream.on('data', function(chunk) {
   console.log('ffmpeg just wrote ' + chunk.length + ' bytes');
 });
@@ -1062,7 +1074,7 @@ ffmpeg('/path/to/video.avi')
 This method sends `signal` (defaults to 'SIGKILL') to the ffmpeg process.  It only has sense when processing has started.  Sending a signal that terminates the process will result in the `error` event being emitted.
 
 ```js
-var command = ffmpeg('/path/to/video.avi')
+const command = ffmpeg('/path/to/video.avi')
   .videoCodec('libx264')
   .audioCodec('libmp3lame')
   .on('start', function() {
@@ -1094,7 +1106,7 @@ This method alters the niceness (priority) value of any running ffmpeg process (
 
 ```js
 // Set startup niceness
-var command = ffmpeg('/path/to/file.avi')
+const command = ffmpeg('/path/to/file.avi')
   .renice(5)
   .save('/path/to/output.mp4');
 
@@ -1261,7 +1273,7 @@ fluent-ffmpeg enables you to query your installed ffmpeg version for supported f
 
 ```js
 
-var Ffmpeg = require('fluent-ffmpeg');
+import Ffmpeg from 'fluent-ffmpeg';
 
 Ffmpeg.getAvailableFormats(function(err, formats) {
   console.log('Available formats:');
@@ -1388,7 +1400,7 @@ Setting options, adding inputs or event handlers on a clone will not affect the 
 
 ```js
 // Create a command to convert source.avi to MP4
-var command = ffmpeg('/path/to/source.avi')
+const command = ffmpeg('/path/to/source.avi')
   .audioCodec('libfaac')
   .videoCodec('libx264')
   .format('mp4');

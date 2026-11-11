@@ -1,7 +1,3 @@
-/*jshint node:true*/
-/*global describe,it*/
-'use strict';
-
 import Ffmpeg from '../index.js';
 
 const aliases = {
@@ -66,14 +62,14 @@ const aliases = {
   }
 };
 
-describe('Method aliases', function() {
-  Object.keys(aliases).forEach(function(category) {
-    describe(category + ' methods', function() {
-      Object.keys(aliases[category]).forEach(function(method) {
-        describe('FfmpegCommand#' + method, function() {
-          aliases[category][method].forEach(function(alias) {
-            it('should have a \'' + alias + '\' alias', function() {
-              var ff = new Ffmpeg();
+describe('Method aliases', () => {
+  Object.keys(aliases).forEach((category) => {
+    describe(category + ' methods', () => {
+      Object.keys(aliases[category]).forEach((method) => {
+        describe('FfmpegCommand#' + method, () => {
+          aliases[category][method].forEach((alias) => {
+            it('should have a \'' + alias + '\' alias', () => {
+              const ff = new Ffmpeg();
 
               (typeof ff[method]).should.equal('function');
               ff[method].should.equal(ff[alias]);

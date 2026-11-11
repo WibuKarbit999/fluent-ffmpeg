@@ -1,9 +1,5 @@
-/*jshint node:true*/
-/*global describe,it,before,after,beforeEach,afterEach*/
-'use strict';
-
 import FfmpegCommand from '../index.js';
-import { join, dirname } from 'path';
+import path from 'path';
 import fs from 'fs';
 import assert from 'assert';
 import { platform } from 'os';
@@ -11,7 +7,10 @@ import { exec } from 'child_process';
 import { spawn } from 'child_process';
 import async from 'async';
 import { Readable, Writable, PassThrough } from 'stream';
-import { TestHelpers } from './helpers.js';
+import { TestHelpers as testhelper } from './helpers.js';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 
 const testHTTP = 'http://127.0.0.1:8090/test.mpg';
@@ -51,7 +50,7 @@ const testRTPOut = 'rtp://127.0.0.1:5540/input.mpg';
   *****************************************************************/
 
 
-describe('Processor', function() {
+describe('Processor', () => {
   // check prerequisites once before all tests
   before(function prerequisites(done) {
     // check for ffmpeg installation
@@ -65,9 +64,9 @@ describe('Processor', function() {
     this.testfileaudio2 = path.join(this.testdir, 'testaudio-two.wav');
     this.testfileaudio3 = path.join(this.testdir, 'testaudio-three.wav');
 
-    var self = this;
+    const self = this;
 
-    exec(testhelper.getFfmpegCheck(), function(err) {
+    exec(testhelper.getFfmpegCheck(), (err) => {
       if (!err) {
         // check if all test files exist
         async.each([
@@ -78,8 +77,8 @@ describe('Processor', function() {
             self.testfileaudio1,
             self.testfileaudio2,
             self.testfileaudio3
-          ], function(file, cb) {
-            fs.exists(file, function(exists) {
+          ], (file, cb) => {
+            fs.exists(file, (exists) => {
               cb(exists ? null : new Error('test video file does not exist, check path (' + file + ')'));
             });
           },
@@ -93,18 +92,18 @@ describe('Processor', function() {
 
   // cleanup helpers before and after all tests
   beforeEach(function setup(done) {
-    var processes = this.processes = [];
-    var outputs = this.outputs = [];
+    const processes = this.processes = [];
+    const outputs = this.outputs = [];
 
     // Tests should call this so that created processes are watched
     // for exit and checked during test cleanup
     this.getCommand = function(args) {
-      var cmd = new FfmpegCommand(args);
-      cmd.on('start', function() {
+      const cmd = new FfmpegCommand(args);
+      cmd.on('start', () => {
         processes.push(cmd.ffmpegProc);
 
         // Remove process when it exits
-        cmd.ffmpegProc.on('exit', function() {
+        cmd.ffmpegProc.on('exit', () => {
           processes.splice(processes.indexOf(cmd.ffmpegProc), 1);
         });
       });
@@ -124,7 +123,7 @@ describe('Processor', function() {
   });
 
   afterEach(function cleanup(done) {
-    var self = this;
+    const self = this;
 
     async.series([
         // Ensure every process has finished
@@ -143,8 +142,8 @@ describe('Processor', function() {
 
         // Ensure all created files are removed
         function(cb) {
-          async.each(self.files, function(file, cb) {
-            fs.exists(file, function(exists) {
+          async.each(self.files, (file, cb) => {
+            fs.exists(file, (exists) => {
               if (exists) {
                 fs.unlink(file, cb);
               } else {
@@ -161,8 +160,8 @@ describe('Processor', function() {
 
         // Ensure all created dirs are removed
         function(cb) {
-          async.each(self.dirs, function(dir, cb) {
-            fs.exists(dir, function(exists) {
+          async.each(self.dirs, (dir, cb) => {
+            fs.exists(dir, (exists) => {
               if (exists) {
                 fs.rmdir(dir, cb);
               } else {
@@ -182,11 +181,11 @@ describe('Processor', function() {
     );
   });
 
-  describe('Process controls', function() {
+  describe('Process controls', () => {
     // Skip all niceness tests on windows
-    var skipNiceness = os.match(/win(32|64)/);
+    const skipNiceness = platform().match(/win(32|64)/);
 
-    var skipRenice = false;
+    const skipRenice = false;
 
     (skipNiceness ? it.skip : it)('should properly limit niceness', function() {
       this.getCommand({ source: this.testfile, logger: testhelper.logger, timeout: 0.02 })
@@ -196,23 +195,23 @@ describe('Processor', function() {
     ((skipNiceness || skipRenice) ? it.skip : it)('should dynamically renice process', function(done) {
       this.timeout(60000);
 
-      var testFile = path.join(__dirname, 'assets', 'testProcessRenice.avi');
+      const testFile = path.join(__dirname, 'assets', 'testProcessRenice.avi');
       this.files.push(testFile);
 
-      var ffmpegJob = this.getCommand({ source: this.testfilebig, logger: testhelper.logger, timeout: 2 })
+      const ffmpegJob = this.getCommand({ source: this.testfilebig, logger: testhelper.logger, timeout: 2 })
           .usingPreset('divx');
 
-      var startCalled = false;
-      var reniced = false;
+      let startCalled = false;
+      let reniced = false;
 
       ffmpegJob
-          .on('start', function() {
+          .on('start', () => {
             startCalled = true;
-            setTimeout(function() {
+            setTimeout(() => {
               ffmpegJob.renice(5);
 
-              setTimeout(function() {
-                exec('ps -p ' + ffmpegJob.ffmpegProc.pid + ' -o ni=', function(err, stdout) {
+              setTimeout(() => {
+                exec('ps -p ' + ffmpegJob.ffmpegProc.pid + ' -o ni=', (err, stdout) => {
                   assert.ok(!err);
                   parseInt(stdout, 10).should.equal(5);
                   reniced = true;
@@ -220,16 +219,16 @@ describe('Processor', function() {
               }, 500);
             }, 500);
 
-            ffmpegJob.ffmpegProc.on('exit', function() {
+            ffmpegJob.ffmpegProc.on('exit', () => {
               reniced.should.equal(true);
               done();
             });
           })
-          .on('error', function() {
+          .on('error', () => {
             reniced.should.equal(true);
             startCalled.should.equal(true);
           })
-          .on('end', function() {
+          .on('end', () => {
             console.log('end was called, expected a timeout');
             assert.ok(false);
             done();
@@ -238,40 +237,40 @@ describe('Processor', function() {
     });
 
     it('should change the working directory', function(done) {
-      var testFile = path.join(this.testdir, 'testvideo.avi');
+      const testFile = path.join(this.testdir, 'testvideo.avi');
       this.files.push(testFile);
 
       this.getCommand({ source: this.testfileName, logger: testhelper.logger, cwd: this.testdir })
         .usingPreset('divx')
-        .on('error', function(err, stdout, stderr) {
+        .on('error', (err, stdout, stderr) => {
           testhelper.logError(err, stdout, stderr);
           assert.ok(!err);
         })
-        .on('end', function() {
+        .on('end', () => {
           done();
         })
         .saveToFile(testFile);
     });
 
     it('should kill the process on timeout', function(done) {
-      var testFile = path.join(__dirname, 'assets', 'testProcessKillTimeout.avi');
+      const testFile = path.join(__dirname, 'assets', 'testProcessKillTimeout.avi');
       this.files.push(testFile);
 
-      var command = this.getCommand({ source: this.testfilebig, logger: testhelper.logger, timeout: 1});
-      var self = this;
+      const command = this.getCommand({ source: this.testfilebig, logger: testhelper.logger, timeout: 1});
+      const self = this;
 
       command
           .usingPreset('divx')
-          .on('start', function() {
-            command.ffmpegProc.on('exit', function() {
+          .on('start', () => {
+            command.ffmpegProc.on('exit', () => {
               done();
             });
           })
-          .on('error', function(err, stdout, stderr) {
+          .on('error', (err, stdout, stderr) => {
             self.saveOutput(stdout, stderr);
             err.message.indexOf('timeout').should.not.equal(-1);
           })
-          .on('end', function() {
+          .on('end', () => {
             console.log('end was called, expected a timeout');
             assert.ok(false);
             done();
@@ -280,44 +279,44 @@ describe('Processor', function() {
     });
 
     it('should not keep node process running on completion', function(done) {
-      var script = `
-        import ffmpeg from '.';
+      const script = `
+        import ffmpeg from './index.js';
         ffmpeg('${this.testfilebig}', { timeout: 60 })
           .addOption('-t', 1)
           .addOption('-f', 'null')
           .saveToFile('/dev/null');
       `;
 
-      exec(`node -e "${script}"`, { timeout: 1000 }, done);
+      exec(`node --input-type=module -e "${script}"`, { timeout: 5000 }, done);
     });
 
     it('should kill the process with .kill', function(done) {
-      var testFile = path.join(__dirname, 'assets', 'testProcessKill.avi');
+      const testFile = path.join(__dirname, 'assets', 'testProcessKill.avi');
       this.files.push(testFile);
 
-      var ffmpegJob = this.getCommand({ source: this.testfilebig, logger: testhelper.logger })
+      const ffmpegJob = this.getCommand({ source: this.testfilebig, logger: testhelper.logger })
           .usingPreset('divx');
 
-      var startCalled = false;
-      var errorCalled = false;
+      let startCalled = false;
+      let errorCalled = false;
 
       ffmpegJob
-          .on('start', function() {
+          .on('start', () => {
             startCalled = true;
-            setTimeout(function() { ffmpegJob.kill(); }, 500);
-            ffmpegJob.ffmpegProc.on('exit', function() {
-              setTimeout(function() {
+            setTimeout(() => { ffmpegJob.kill(); }, 500);
+            ffmpegJob.ffmpegProc.on('exit', () => {
+              setTimeout(() => {
                 errorCalled.should.equal(true);
                 done();
               }, 1000);
             });
           })
-          .on('error', function(err) {
+          .on('error', (err) => {
             err.message.indexOf('ffmpeg was killed with signal SIGKILL').should.not.equal(-1);
             startCalled.should.equal(true);
             errorCalled = true;
           })
-          .on('end', function() {
+          .on('end', () => {
             console.log('end was called, expected an error');
             assert.ok(false);
             done();
@@ -328,33 +327,33 @@ describe('Processor', function() {
     it('should send the process custom signals with .kill(signal)', function(done) {
       this.timeout(60000);
 
-      var testFile = path.join(__dirname, 'assets', 'testProcessKillCustom.avi');
+      const testFile = path.join(__dirname, 'assets', 'testProcessKillCustom.avi');
       this.files.push(testFile);
 
-      var ffmpegJob = this.getCommand({ source: this.testfilebig, logger: testhelper.logger, timeout: 2 })
+      const ffmpegJob = this.getCommand({ source: this.testfilebig, logger: testhelper.logger, timeout: 2 })
           .usingPreset('divx');
 
-      var startCalled = true;
-      var errorCalled = false;
+      let startCalled = true;
+      let errorCalled = false;
       ffmpegJob
-          .on('start', function() {
+          .on('start', () => {
             startCalled = true;
 
-            setTimeout(function() { ffmpegJob.kill('SIGSTOP'); }, 500);
+            setTimeout(() => { ffmpegJob.kill('SIGSTOP'); }, 500);
 
-            ffmpegJob.ffmpegProc.on('exit', function() {
+            ffmpegJob.ffmpegProc.on('exit', () => {
               errorCalled.should.equal(true);
               done();
             });
           })
-          .on('error', function(err) {
+          .on('error', (err) => {
             startCalled.should.equal(true);
             err.message.indexOf('timeout').should.not.equal(-1);
 
             errorCalled = true;
             ffmpegJob.kill('SIGCONT');
           })
-          .on('end', function() {
+          .on('end', () => {
             console.log('end was called, expected a timeout');
             assert.ok(false);
             done();
@@ -364,24 +363,24 @@ describe('Processor', function() {
     });
   });
 
-  describe('Events', function() {
+  describe('Events', () => {
     it('should report codec data through \'codecData\' event', function(done) {
       this.timeout(60000);
 
-      var testFile = path.join(__dirname, 'assets', 'testOnCodecData.avi');
+      const testFile = path.join(__dirname, 'assets', 'testOnCodecData.avi');
       this.files.push(testFile);
 
       this.getCommand({ source: this.testfilebig, logger: testhelper.logger })
-        .on('codecData', function(data) {
+        .on('codecData', (data) => {
           data.should.have.property('audio');
           data.should.have.property('video');
         })
         .usingPreset('divx')
-        .on('error', function(err, stdout, stderr) {
+        .on('error', (err, stdout, stderr) => {
           testhelper.logError(err, stdout, stderr);
           assert.ok(!err);
         })
-        .on('end', function() {
+        .on('end', () => {
           done();
         })
         .saveToFile(testFile);
@@ -390,20 +389,20 @@ describe('Processor', function() {
     it('should report codec data through \'codecData\' event on piped inputs', function(done) {
       this.timeout(60000);
 
-      var testFile = path.join(__dirname, 'assets', 'testOnCodecData.avi')
+      const testFile = path.join(__dirname, 'assets', 'testOnCodecData.avi')
       this.files.push(testFile);
 
       this.getCommand({ source: fs.createReadStream(this.testfilebig), logger: testhelper.logger })
-        .on('codecData', function(data) {
+        .on('codecData', (data) => {
           data.should.have.property('audio');
           data.should.have.property('video');
         })
         .usingPreset('divx')
-        .on('error', function(err, stdout, stderr) {
+        .on('error', (err, stdout, stderr) => {
           testhelper.logError(err, stdout, stderr);
           assert.ok(!err);
         })
-        .on('end', function() {
+        .on('end', () => {
           done();
         })
         .saveToFile(testFile);
@@ -412,21 +411,21 @@ describe('Processor', function() {
     it('should report codec data through \'codecData\' for multiple inputs', function(done) {
       this.timeout(60000);
 
-      var testFile = path.join(__dirname, 'assets', 'testOnCodecData.wav')
+      const testFile = path.join(__dirname, 'assets', 'testOnCodecData.wav')
       this.files.push(testFile);
 
       this.getCommand({ logger: testhelper.logger })
         .input(this.testfileaudio1)
         .input(this.testfileaudio2)
-        .on('codecData', function(data1, data2) {
+        .on('codecData', (data1, data2) => {
           data1.should.have.property('audio');
           data2.should.have.property('audio');
         })
-        .on('error', function(err, stdout, stderr) {
+        .on('error', (err, stdout, stderr) => {
           testhelper.logError(err, stdout, stderr);
           assert.ok(!err);
         })
-        .on('end', function() {
+        .on('end', () => {
           done();
         })
         .mergeToFile(testFile);
@@ -435,21 +434,21 @@ describe('Processor', function() {
     it('should report progress through \'progress\' event', function(done) {
       this.timeout(60000);
 
-      var testFile = path.join(__dirname, 'assets', 'testOnProgress.avi');
-      var gotProgress = false;
+      const testFile = path.join(__dirname, 'assets', 'testOnProgress.avi');
+      let gotProgress = false;
 
       this.files.push(testFile);
 
       this.getCommand({ source: this.testfilebig, logger: testhelper.logger })
-          .on('progress', function() {
+          .on('progress', () => {
             gotProgress = true;
           })
           .usingPreset('divx')
-          .on('error', function(err, stdout, stderr) {
+          .on('error', (err, stdout, stderr) => {
             testhelper.logError(err, stdout, stderr);
             assert.ok(!err);
           })
-          .on('end', function() {
+          .on('end', () => {
             gotProgress.should.equal(true);
             done();
           })
@@ -459,13 +458,13 @@ describe('Processor', function() {
     it('should report start of ffmpeg process through \'start\' event', function(done) {
       this.timeout(60000);
 
-      var testFile = path.join(__dirname, 'assets', 'testStart.avi');
-      var startCalled = false;
+      const testFile = path.join(__dirname, 'assets', 'testStart.avi');
+      let startCalled = false;
 
       this.files.push(testFile);
 
       this.getCommand({ source: this.testfilebig, logger: testhelper.logger })
-          .on('start', function(cmdline) {
+          .on('start', (cmdline) => {
             startCalled = true;
 
             // Only test a subset of command line
@@ -474,11 +473,11 @@ describe('Processor', function() {
             cmdline.indexOf('-b:a 128k').should.not.equal(-1);
           })
           .usingPreset('divx')
-          .on('error', function(err, stdout, stderr) {
+          .on('error', (err, stdout, stderr) => {
             testhelper.logError(err, stdout, stderr);
             assert.ok(!err);
           })
-          .on('end', function() {
+          .on('end', () => {
             startCalled.should.equal(true);
             done();
           })
@@ -488,45 +487,45 @@ describe('Processor', function() {
     it('should report output lines through \'stderr\' event', function(done) {
       this.timeout(60000);
 
-      var testFile = path.join(__dirname, 'assets', 'testStderr.avi');
-      var lines = [];
+      const testFile = path.join(__dirname, 'assets', 'testStderr.avi');
+      const lines = [];
 
       this.files.push(testFile);
 
       this.getCommand({ source: this.testfile, logger: testhelper.logger })
-          .on('stderr', function(line) {
+          .on('stderr', (line) => {
             lines.push(line);
           })
           .usingPreset('divx')
-          .on('error', function(err, stdout, stderr) {
+          .on('error', (err, stdout, stderr) => {
             testhelper.logError(err, stdout, stderr);
             assert.ok(!err);
           })
-          .on('end', function() {
+          .on('end', () => {
             lines.length.should.above(0);
             lines[0].should.startWith('ffmpeg version');
-            lines.filter(function(l) { return l.indexOf('Press [q]') === 0. }).length.should.above(0);
+            lines.filter((l) => { return l.indexOf('Press [q]') === 0. }).length.should.above(0);
             done();
           })
           .saveToFile(testFile);
     });
   });
 
-  describe('Output limiting', function() {
+  describe('Output limiting', () => {
     it('should limit stdout/stderr lines', function(done) {
       this.timeout(60000);
 
-      var testFile = path.join(__dirname, 'assets', 'testLimit10.avi');
+      const testFile = path.join(__dirname, 'assets', 'testLimit10.avi');
 
       this.files.push(testFile);
 
       this.getCommand({ stdoutLines: 10, source: this.testfile, logger: testhelper.logger })
           .usingPreset('divx')
-          .on('error', function(err, stdout, stderr) {
+          .on('error', (err, stdout, stderr) => {
             testhelper.logError(err, stdout, stderr);
             assert.ok(!err);
           })
-          .on('end', function(stdout, stderr) {
+          .on('end', (stdout, stderr) => {
             stdout.split('\n').length.should.below(11);
             stderr.split('\n').length.should.below(11);
             done();
@@ -535,41 +534,41 @@ describe('Processor', function() {
     });
   });
 
-  describe('takeScreenshots', function() {
+  describe('takeScreenshots', () => {
     function testScreenshots(title, name, config, files) {
       it(title, function(done) {
-        var filenamesCalled = false;
-        var testFolder = path.join(__dirname, 'assets', 'screenshots_' + name);
+        let filenamesCalled = false;
+        const testFolder = path.join(__dirname, 'assets', 'screenshots_' + name);
 
-        var context = this;
-        files.forEach(function(file) {
+        const context = this;
+        files.forEach((file) => {
           context.files.push(path.join(testFolder, file));
         });
         this.dirs.push(testFolder);
 
         this.getCommand({ source: this.testfile, logger: testhelper.logger })
-          .on('error', function(err, stdout, stderr) {
+          .on('error', (err, stdout, stderr) => {
             testhelper.logError(err, stdout, stderr);
             assert.ok(!err);
           })
-          .on('filenames', function(filenames) {
+          .on('filenames', (filenames) => {
             filenamesCalled = true;
             filenames.length.should.equal(files.length);
-            filenames.forEach(function(file, index) {
+            filenames.forEach((file, index) => {
               file.should.equal(files[index]);
             });
           })
-          .on('end', function() {
+          .on('end', () => {
             filenamesCalled.should.equal(true);
-            fs.readdir(testFolder, function(err, content) {
-              var tnCount = 0;
-              content.forEach(function(file) {
+            fs.readdir(testFolder, (err, content) => {
+              let tnCount = 0;
+              content.forEach((file) => {
                 if (file.indexOf('.png') > -1) {
                   tnCount++;
                 }
               });
               tnCount.should.equal(files.length);
-              files.forEach(function(file) {
+              files.forEach((file) => {
                 content.indexOf(file).should.not.equal(-1);
               });
               done();
@@ -685,22 +684,22 @@ describe('Processor', function() {
     );
   });
 
-  describe('saveToFile', function() {
+  describe('saveToFile', () => {
     it('should save the output file properly to disk', function(done) {
-      var testFile = path.join(__dirname, 'assets', 'testConvertToFile.avi');
+      const testFile = path.join(__dirname, 'assets', 'testConvertToFile.avi');
       this.files.push(testFile);
 
       this.getCommand({ source: this.testfile, logger: testhelper.logger })
         .usingPreset('divx')
-        .on('error', function(err, stdout, stderr) {
+        .on('error', (err, stdout, stderr) => {
           testhelper.logError(err, stdout, stderr);
           assert.ok(!err);
         })
-        .on('end', function() {
-          fs.exists(testFile, function(exist) {
+        .on('end', () => {
+          fs.exists(testFile, (exist) => {
             exist.should.equal(true);
             // check filesize to make sure conversion actually worked
-            fs.stat(testFile, function(err, stats) {
+            fs.stat(testFile, (err, stats) => {
               assert.ok(!err && stats);
 
               stats.size.should.above(0);
@@ -714,36 +713,36 @@ describe('Processor', function() {
     });
 
     it('should save an output file with special characters properly to disk', function(done) {
-      var testFile = path.join(__dirname, 'assets', 'te[s]t video \' " .avi');
+      const testFile = path.join(__dirname, 'assets', 'te[s]t video \' " .avi');
       this.files.push(testFile);
 
       this.getCommand({ source: this.testfile, logger: testhelper.logger })
         .usingPreset('divx')
-        .on('error', function(err, stdout, stderr) {
+        .on('error', (err, stdout, stderr) => {
           testhelper.logError(err, stdout, stderr);
           assert.ok(!err);
         })
-        .on('end', function() {
+        .on('end', () => {
           done();
         })
         .saveToFile(testFile);
     });
 
     it('should save output files with special characters', function(done) {
-      var testFile = path.join(__dirname, 'assets', '[test "special \' char*cters \n.avi');
+      const testFile = path.join(__dirname, 'assets', '[test "special \' char*cters \n.avi');
       this.files.push(testFile);
 
       this.getCommand({ source: this.testfile, logger: testhelper.logger })
         .usingPreset('divx')
-        .on('error', function(err, stdout, stderr) {
+        .on('error', (err, stdout, stderr) => {
           testhelper.logError(err, stdout, stderr);
           assert.ok(!err);
         })
-        .on('end', function() {
-          fs.exists(testFile, function(exist) {
+        .on('end', () => {
+          fs.exists(testFile, (exist) => {
             exist.should.equal(true);
             // check filesize to make sure conversion actually worked
-            fs.stat(testFile, function(err, stats) {
+            fs.stat(testFile, (err, stats) => {
               assert.ok(!err && stats);
               stats.size.should.above(0);
               stats.isFile().should.equal(true);
@@ -756,21 +755,21 @@ describe('Processor', function() {
     });
 
     it('should accept a stream as its source', function(done) {
-      var testFile = path.join(__dirname, 'assets', 'testConvertFromStreamToFile.avi');
+      const testFile = path.join(__dirname, 'assets', 'testConvertFromStreamToFile.avi');
       this.files.push(testFile);
 
-      var instream = fs.createReadStream(this.testfile);
+      const instream = fs.createReadStream(this.testfile);
       this.getCommand({ source: instream, logger: testhelper.logger })
         .usingPreset('divx')
-        .on('error', function(err, stdout, stderr) {
+        .on('error', (err, stdout, stderr) => {
           testhelper.logError(err, stdout, stderr);
           assert.ok(!err);
         })
-        .on('end', function() {
-          fs.exists(testFile, function(exist) {
+        .on('end', () => {
+          fs.exists(testFile, (exist) => {
             exist.should.equal(true);
             // check filesize to make sure conversion actually worked
-            fs.stat(testFile, function(err, stats) {
+            fs.stat(testFile, (err, stats) => {
               assert.ok(!err && stats);
               stats.size.should.above(0);
               stats.isFile().should.equal(true);
@@ -783,10 +782,10 @@ describe('Processor', function() {
     });
 
     it('should pass input stream errors through to error handler', function(done) {
-      var testFile = path.join(__dirname, 'assets', 'testConvertFromStream.avi')
+      const testFile = path.join(__dirname, 'assets', 'testConvertFromStream.avi')
 
 		const readError = new Error('Read Error')
-      const instream = new (Readable)({
+      const instream = new Readable({
         read() {
   		    process.nextTick(() => this.emit('error', readError))
 		  }
@@ -799,23 +798,23 @@ describe('Processor', function() {
 
       command
           .usingPreset('divx')
-          .on('start', function() {
+          .on('start', () => {
           	startCalled = true
-            command.ffmpegProc.on('exit', function() {
+            command.ffmpegProc.on('exit', () => {
             	fs.exists(testFile, (exists) => {
             		exists.should.be.false()
 						done()
             	})
             })
           })
-          .on('error', function(err, stdout, stderr) {
+          .on('error', (err, stdout, stderr) => {
             self.saveOutput(stdout, stderr)
             startCalled.should.be.true()
             assert.ok(err)
             err.message.indexOf('Input stream error: ').should.equal(0)
 			   assert.strictEqual(err.inputStreamError, readError)
           })
-          .on('end', function(stdout, stderr) {
+          .on('end', (stdout, stderr) => {
             testhelper.logOutput(stdout, stderr)
             console.log('end was called, expected a error')
             assert.ok(false)
@@ -825,22 +824,22 @@ describe('Processor', function() {
     })
   });
 
-  describe('mergeToFile', function() {
+  describe('mergeToFile', () => {
 
     it('should merge multiple files', function(done) {
-      var testFile = path.join(__dirname, 'assets', 'testMergeAddOption.wav');
+      const testFile = path.join(__dirname, 'assets', 'testMergeAddOption.wav');
       this.files.push(testFile);
 
       this.getCommand({source: this.testfileaudio1, logger: testhelper.logger})
-        .on('error', function(err, stdout, stderr) {
+        .on('error', (err, stdout, stderr) => {
           testhelper.logError(err, stdout, stderr);
           assert.ok(!err);
         })
-        .on('end', function() {
-          fs.exists(testFile, function(exist) {
+        .on('end', () => {
+          fs.exists(testFile, (exist) => {
             exist.should.equal(true);
             // check filesize to make sure conversion actually worked
-            fs.stat(testFile, function(err, stats) {
+            fs.stat(testFile, (err, stats) => {
               assert.ok(!err && stats);
               stats.size.should.above(0);
               stats.isFile().should.equal(true);
@@ -855,20 +854,20 @@ describe('Processor', function() {
     });
   });
 
-  describe('writeToStream', function() {
+  describe('writeToStream', () => {
     it('should save the output file properly to disk using a stream', function(done) {
-      var testFile = path.join(__dirname, 'assets', 'testConvertToStream.avi');
+      const testFile = path.join(__dirname, 'assets', 'testConvertToStream.avi');
       this.files.push(testFile);
 
-      var outstream = fs.createWriteStream(testFile);
+      const outstream = fs.createWriteStream(testFile);
       this.getCommand({ source: this.testfile, logger: testhelper.logger })
         .usingPreset('divx')
-        .on('error', function(err, stdout, stderr) {
+        .on('error', (err, stdout, stderr) => {
           testhelper.logError(err, stdout, stderr);
           assert.ok(!err);
         })
-        .on('end', function(stdout, stderr) {
-          fs.exists(testFile, function(exist) {
+        .on('end', (stdout, stderr) => {
+          fs.exists(testFile, (exist) => {
             if (!exist) {
               console.log(stderr);
             }
@@ -876,7 +875,7 @@ describe('Processor', function() {
             exist.should.equal(true);
 
             // check filesize to make sure conversion actually worked
-            fs.stat(testFile, function(err, stats) {
+            fs.stat(testFile, (err, stats) => {
               assert.ok(!err && stats);
               stats.size.should.above(0);
               stats.isFile().should.equal(true);
@@ -889,27 +888,27 @@ describe('Processor', function() {
     });
 
     it('should accept a stream as its source', function(done) {
-      var testFile = path.join(__dirname, 'assets', 'testConvertFromStreamToStream.avi');
+      const testFile = path.join(__dirname, 'assets', 'testConvertFromStreamToStream.avi');
       this.files.push(testFile);
 
-      var instream = fs.createReadStream(this.testfile);
-      var outstream = fs.createWriteStream(testFile);
+      const instream = fs.createReadStream(this.testfile);
+      const outstream = fs.createWriteStream(testFile);
 
       this.getCommand({ source: instream, logger: testhelper.logger })
         .usingPreset('divx')
-        .on('error', function(err, stdout, stderr) {
+        .on('error', (err, stdout, stderr) => {
           testhelper.logError(err, stdout, stderr);
           assert.ok(!err);
         })
-        .on('end', function(stdout,stderr) {
-          fs.exists(testFile, function(exist) {
+        .on('end', (stdout,stderr) => {
+          fs.exists(testFile, (exist) => {
             if (!exist) {
               console.log(stderr);
             }
 
             exist.should.equal(true);
             // check filesize to make sure conversion actually worked
-            fs.stat(testFile, function(err, stats) {
+            fs.stat(testFile, (err, stats) => {
               assert.ok(!err && stats);
               stats.size.should.above(0);
               stats.isFile().should.equal(true);
@@ -922,20 +921,20 @@ describe('Processor', function() {
     });
 
     (process.version.match(/v0\.8\./) ? it.skip : it)('should return a PassThrough stream when called with no arguments on node >=0.10', function(done) {
-      var testFile = path.join(__dirname, 'assets', 'testConvertToStream.avi');
+      const testFile = path.join(__dirname, 'assets', 'testConvertToStream.avi');
       this.files.push(testFile);
 
-      var outstream = fs.createWriteStream(testFile);
-      var command = this.getCommand({ source: this.testfile, logger: testhelper.logger });
+      const outstream = fs.createWriteStream(testFile);
+      const command = this.getCommand({ source: this.testfile, logger: testhelper.logger });
 
       command
         .usingPreset('divx')
-        .on('error', function(err, stdout, stderr) {
+        .on('error', (err, stdout, stderr) => {
           testhelper.logError(err, stdout, stderr);
           assert.ok(!err);
         })
-        .on('end', function(stdout, stderr) {
-          fs.exists(testFile, function(exist) {
+        .on('end', (stdout, stderr) => {
+          fs.exists(testFile, (exist) => {
             if (!exist) {
               console.log(stderr);
             }
@@ -943,7 +942,7 @@ describe('Processor', function() {
             exist.should.equal(true);
 
             // check filesize to make sure conversion actually worked
-            fs.stat(testFile, function(err, stats) {
+            fs.stat(testFile, (err, stats) => {
               assert.ok(!err && stats);
               stats.size.should.above(0);
               stats.isFile().should.equal(true);
@@ -953,13 +952,13 @@ describe('Processor', function() {
           });
         });
 
-      var passthrough = command.writeToStream({end: true});
+      const passthrough = command.writeToStream({end: true});
 
-      passthrough.should.instanceof(stream.PassThrough);
+      passthrough.should.instanceof(PassThrough);
       passthrough.pipe(outstream);
     });
 
-    (process.version.match(/v0\.8\./) ? it : it.skip)('should throw an error when called with no arguments on node 0.8', function() {
+    (process.version.match(/v0\.8\./) ? it : it.skip)('should throw an error when called with no arguments on node 0.8', () => {
       (function() {
         new FfmpegCommand().writeToStream({end: true});
       }).should.throw(/PassThrough stream is not supported on node v0.8/);
@@ -968,7 +967,7 @@ describe('Processor', function() {
     it('should pass output stream errors through to error handler', function(done) {
 
 		const writeError = new Error('Write Error')
-      const outstream = new (Writable)({
+      const outstream = new Writable({
         write(chunk, encoding, callback) {
           callback(writeError)
 		  }
@@ -981,20 +980,20 @@ describe('Processor', function() {
 
       command
           .usingPreset('divx')
-          .on('start', function() {
+          .on('start', () => {
           	startCalled = true
-            command.ffmpegProc.on('exit', function() {
+            command.ffmpegProc.on('exit', () => {
 					done()
             })
           })
-          .on('error', function(err, stdout, stderr) {
+          .on('error', (err, stdout, stderr) => {
             self.saveOutput(stdout, stderr)
             startCalled.should.be.true()
             assert.ok(err)
             err.message.indexOf('Output stream error: ').should.equal(0)
 			   assert.strictEqual(err.outputStreamError, writeError)
           })
-          .on('end', function(stdout, stderr) {
+          .on('end', (stdout, stderr) => {
             console.log('end was called, expected a error')
             testhelper.logOutput(stdout, stderr)
             assert.ok(false)
@@ -1004,15 +1003,15 @@ describe('Processor', function() {
     })
   });
 
-  describe('Outputs', function() {
+  describe('Outputs', () => {
     it('should create multiple outputs', function(done) {
       this.timeout(30000);
 
-      var testFile1 = path.join(__dirname, 'assets', 'testMultipleOutput1.avi');
+      const testFile1 = path.join(__dirname, 'assets', 'testMultipleOutput1.avi');
       this.files.push(testFile1);
-      var testFile2 = path.join(__dirname, 'assets', 'testMultipleOutput2.avi');
+      const testFile2 = path.join(__dirname, 'assets', 'testMultipleOutput2.avi');
       this.files.push(testFile2);
-      var testFile3 = path.join(__dirname, 'assets', 'testMultipleOutput3.mp4');
+      const testFile3 = path.join(__dirname, 'assets', 'testMultipleOutput3.mp4');
       this.files.push(testFile3);
 
       this.getCommand({ source: this.testfilebig, logger: testhelper.logger })
@@ -1026,19 +1025,19 @@ describe('Processor', function() {
         .withSize('160x120')
         .withAudioCodec('aac')
         .withVideoCodec('libx264')
-        .on('error', function(err, stdout, stderr) {
+        .on('error', (err, stdout, stderr) => {
           testhelper.logError(err, stdout, stderr);
           assert.ok(!err);
         })
-        .on('end', function() {
+        .on('end', () => {
           async.map(
             [testFile1, testFile2, testFile3],
-            function(file, cb) {
-              fs.exists(file, function(exist) {
+            (file, cb) => {
+              fs.exists(file, (exist) => {
                 exist.should.equal(true);
 
                 // check filesize to make sure conversion actually worked
-                fs.stat(file, function(err, stats) {
+                fs.stat(file, (err, stats) => {
                   assert.ok(!err && stats);
                   stats.size.should.above(0);
                   stats.isFile().should.equal(true);
@@ -1047,7 +1046,7 @@ describe('Processor', function() {
                 });
               });
             },
-            function(err) {
+            (err) => {
               testhelper.logError(err);
               assert.ok(!err);
               done();
@@ -1058,23 +1057,23 @@ describe('Processor', function() {
     });
   });
 
-  describe('Inputs', function() {
+  describe('Inputs', () => {
     it('should take input from a file with special characters', function(done) {
-      var testFile = path.join(__dirname, 'assets', 'testSpecialInput.avi');
+      const testFile = path.join(__dirname, 'assets', 'testSpecialInput.avi');
       this.files.push(testFile);
 
       this.getCommand({ source: this.testfilespecial, logger: testhelper.logger, timeout: 10 })
         .takeFrames(50)
         .usingPreset('divx')
-        .on('error', function(err, stdout, stderr) {
+        .on('error', (err, stdout, stderr) => {
           testhelper.logError(err, stdout, stderr);
           assert.ok(!err);
         })
-        .on('end', function() {
-          fs.exists(testFile, function(exist) {
+        .on('end', () => {
+          fs.exists(testFile, (exist) => {
             exist.should.equal(true);
             // check filesize to make sure conversion actually worked
-            fs.stat(testFile, function(err, stats) {
+            fs.stat(testFile, (err, stats) => {
               assert.ok(!err && stats);
               stats.size.should.above(0);
               stats.isFile().should.equal(true);
@@ -1090,9 +1089,9 @@ describe('Processor', function() {
   describe.skip('Remote I/O', function() {
     this.timeout(60000);
 
-    var ffserver;
+    let ffserver;
 
-    before(function(done) {
+    before((done) => {
       testhelper.logger.debug('spawning ffserver');
       ffserver = spawn(
         'ffserver',
@@ -1101,7 +1100,7 @@ describe('Processor', function() {
       );
 
       // Wait for ffserver to be ready
-      var isready = false;
+      let isready = false;
       function ready() {
         if (!isready) {
           testhelper.logger.debug('ffserver is ready');
@@ -1110,13 +1109,13 @@ describe('Processor', function() {
         }
       }
 
-      ffserver.stdout.on('data', function(d) {
+      ffserver.stdout.on('data', (d) => {
         if (d.toString().match(/server started/i)) {
           ready();
         }
       });
 
-      ffserver.stderr.on('data', function(d) {
+      ffserver.stderr.on('data', (d) => {
         if (d.toString().match(/server started/i)) {
           ready();
         }
@@ -1124,32 +1123,32 @@ describe('Processor', function() {
 
     });
 
-    beforeEach(function(done) {
+    beforeEach((done) => {
       setTimeout(done, 5000);
     });
 
-    after(function(done) {
+    after((done) => {
       ffserver.kill();
       setTimeout(done, 1000);
     });
 
     it('should take input from a RTSP stream', function(done) {
-      var testFile = path.join(__dirname, 'assets', 'testRTSPInput.avi');
+      const testFile = path.join(__dirname, 'assets', 'testRTSPInput.avi');
       this.files.push(testFile);
 
       this.getCommand({ source: encodeURI(testRTSP), logger: testhelper.logger, timeout: 0 })
         .takeFrames(10)
         .usingPreset('divx')
         .withSize('320x240')
-        .on('error', function(err, stdout, stderr) {
+        .on('error', (err, stdout, stderr) => {
           testhelper.logError(err, stdout, stderr);
           assert.ok(!err);
         })
-        .on('end', function() {
-          fs.exists(testFile, function(exist) {
+        .on('end', () => {
+          fs.exists(testFile, (exist) => {
             exist.should.equal(true);
             // check filesize to make sure conversion actually worked
-            fs.stat(testFile, function(err, stats) {
+            fs.stat(testFile, (err, stats) => {
               assert.ok(!err && stats);
               stats.size.should.above(0);
               stats.isFile().should.equal(true);
@@ -1162,22 +1161,22 @@ describe('Processor', function() {
     });
 
     it('should take input from an URL', function(done) {
-      var testFile = path.join(__dirname, 'assets', 'testURLInput.avi');
+      const testFile = path.join(__dirname, 'assets', 'testURLInput.avi');
       this.files.push(testFile);
 
       this.getCommand({ source: testHTTP, logger: testhelper.logger, timeout: 0 })
         .takeFrames(5)
         .usingPreset('divx')
         .withSize('320x240')
-        .on('error', function(err, stdout, stderr) {
+        .on('error', (err, stdout, stderr) => {
           testhelper.logError(err, stdout, stderr);
           assert.ok(!err);
         })
-        .on('end', function() {
-          fs.exists(testFile, function(exist) {
+        .on('end', () => {
+          fs.exists(testFile, (exist) => {
             exist.should.equal(true);
             // check filesize to make sure conversion actually worked
-            fs.stat(testFile, function(err, stats) {
+            fs.stat(testFile, (err, stats) => {
               assert.ok(!err && stats);
               stats.size.should.above(0);
               stats.isFile().should.equal(true);
@@ -1193,38 +1192,38 @@ describe('Processor', function() {
       this.getCommand({ source: this.testfilebig, logger: testhelper.logger })
         .videoCodec('libx264')
         .audioCodec('copy')
-        .on('error', function(err, stdout, stderr) {
+        .on('error', (err, stdout, stderr) => {
           testhelper.logError(err, stdout, stderr);
           assert.ok(!err);
         })
-        .on('end', function() {
+        .on('end', () => {
           done();
         })
         .save(testRTPOut);
     });
   });
 
-  describe('Errors', function() {
+  describe('Errors', () => {
     it('should report an error when ffmpeg has been killed', function(done) {
       this.timeout(10000);
 
-      var testFile = path.join(__dirname, 'assets', 'testErrorKill.avi');
+      const testFile = path.join(__dirname, 'assets', 'testErrorKill.avi');
       this.files.push(testFile);
 
-      var command = this.getCommand({ source: this.testfilebig, logger: testhelper.logger });
+      const command = this.getCommand({ source: this.testfilebig, logger: testhelper.logger });
 
       command
         .usingPreset('divx')
-        .on('start', function() {
-          setTimeout(function() {
+        .on('start', () => {
+          setTimeout(() => {
             command.kill('SIGKILL');
           }, 1000);
         })
-        .on('error', function(err) {
+        .on('error', (err) => {
           err.message.should.match(/ffmpeg was killed with signal SIGKILL/);
           done();
         })
-        .on('end', function() {
+        .on('end', () => {
           assert.ok(false);
         })
         .saveToFile(testFile);
@@ -1233,7 +1232,7 @@ describe('Processor', function() {
     it('should report ffmpeg errors', function(done) {
       this.getCommand({ source: this.testfilebig, logger: testhelper.logger })
         .addOption('-invalidoption')
-        .on('error', function(err) {
+        .on('error', (err) => {
           setTimeout(done, 1000);
           err.message.should.match(/Unrecognized option 'invalidoption'/);
         })

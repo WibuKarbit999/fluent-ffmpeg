@@ -1,14 +1,10 @@
-/*jshint node:true*/
-/*global describe,it*/
-'use strict';
+import * as utils from '../lib/utils.js';
 
-import { args, timemarkToSeconds, linesRing } from '../lib/utils.js';
+describe('Utilities', () => {
 
-describe('Utilities', function() {
-
-  describe('Argument list helper', function() {
-    it('Should add arguments to the list', function() {
-      var args = utils.args();
+  describe('Argument list helper', () => {
+    it('Should add arguments to the list', () => {
+      const args = utils.args();
 
       args('-one');
       args('-two', 'two-param');
@@ -18,23 +14,23 @@ describe('Utilities', function() {
       args.get().length.should.equal(10);
     });
 
-    it('Should return the argument list', function() {
-      var args = utils.args();
+    it('Should return the argument list', () => {
+      const args = utils.args();
 
       args('-one');
       args('-two', 'two-param');
       args('-three', 'three-param1', 'three-param2');
       args(['-four', 'four-param', '-five', '-five-param']);
 
-      var arr = args.get();
+      const arr = args.get();
       Array.isArray(arr).should.equal(true);
       arr.length.should.equal(10);
       arr.indexOf('-three').should.equal(3);
       arr.indexOf('four-param').should.equal(7);
     });
 
-    it('Should clear the argument list', function() {
-      var args = utils.args();
+    it('Should clear the argument list', () => {
+      const args = utils.args();
 
       args('-one');
       args('-two', 'two-param');
@@ -45,35 +41,35 @@ describe('Utilities', function() {
       args.get().length.should.equal(0);
     });
 
-    it('Should retrieve arguments from the list', function() {
-      var args = utils.args();
+    it('Should retrieve arguments from the list', () => {
+      const args = utils.args();
 
       args('-one');
       args('-two', 'two-param');
       args('-three', 'three-param1', 'three-param2');
       args(['-four', 'four-param', '-five', '-five-param']);
 
-      var one = args.find('-one');
+      const one = args.find('-one');
       Array.isArray(one).should.equal(true);
       one.length.should.equal(0);
 
-      var two = args.find('-two', 1);
+      const two = args.find('-two', 1);
       Array.isArray(two).should.equal(true);
       two.length.should.equal(1);
       two[0].should.equal('two-param');
 
-      var three = args.find('-three', 2);
+      const three = args.find('-three', 2);
       Array.isArray(three).should.equal(true);
       three.length.should.equal(2);
       three[0].should.equal('three-param1');
       three[1].should.equal('three-param2');
 
-      var nope = args.find('-nope', 2);
+      const nope = args.find('-nope', 2);
       (typeof nope).should.equal('undefined');
     });
 
-    it('Should remove arguments from the list', function() {
-      var args = utils.args();
+    it('Should remove arguments from the list', () => {
+      const args = utils.args();
 
       args('-one');
       args('-two', 'two-param');
@@ -81,7 +77,7 @@ describe('Utilities', function() {
       args(['-four', 'four-param', '-five', '-five-param']);
 
       args.remove('-four', 1);
-      var arr = args.get();
+      let arr = args.get();
       arr.length.should.equal(8);
       arr[5].should.equal('three-param2');
       arr[6].should.equal('-five');
@@ -99,49 +95,49 @@ describe('Utilities', function() {
     });
   });
 
-  describe('timemarkToSeconds', function() {
-    it('should correctly convert a simple timestamp', function() {
+  describe('timemarkToSeconds', () => {
+    it('should correctly convert a simple timestamp', () => {
       utils.timemarkToSeconds('00:02:00.00').should.be.equal(120);
     });
-    it('should correctly convert a complex timestamp', function() {
+    it('should correctly convert a complex timestamp', () => {
       utils.timemarkToSeconds('00:08:09.10').should.be.equal(489.1);
     });
-    it('should correclty convert a simple float string timestamp', function() {
+    it('should correclty convert a simple float string timestamp', () => {
       utils.timemarkToSeconds('132.44').should.be.equal(132.44);
     });
-    it('should correclty convert a simple float timestamp', function() {
+    it('should correclty convert a simple float timestamp', () => {
       utils.timemarkToSeconds(132.44).should.be.equal(132.44);
     });
   });
 
-  describe('Lines ring buffer', function() {
-    it('should append lines', function() {
-      var ring = utils.linesRing(100);
+  describe('Lines ring buffer', () => {
+    it('should append lines', () => {
+      const ring = utils.linesRing(100);
       ring.append('foo\nbar\nbaz\n');
       ring.append('foo\nbar\nbaz\n');
       ring.get().should.equal('foo\nbar\nbaz\nfoo\nbar\nbaz\n');
     });
 
-    it('should append partial lines', function() {
-      var ring = utils.linesRing(100);
+    it('should append partial lines', () => {
+      const ring = utils.linesRing(100);
       ring.append('foo');
       ring.append('bar\nbaz');
       ring.append('moo');
       ring.get().should.equal('foobar\nbazmoo');
     });
 
-    it('should call line callbacks', function() {
-      var lines = [];
+    it('should call line callbacks', () => {
+      const lines = [];
       function cb(l) {
         lines.push(l);
       }
 
-      var lines2 = [];
+      const lines2 = [];
       function cb2(l) {
         lines2.push(l);
       }
 
-      var ring = utils.linesRing(100);
+      const ring = utils.linesRing(100);
       ring.callback(cb);
       ring.callback(cb2);
 
@@ -164,13 +160,13 @@ describe('Utilities', function() {
       lines2[3].should.equal('meow');
     });
 
-    it('should close correctly', function() {
-      var lines = [];
+    it('should close correctly', () => {
+      const lines = [];
       function cb(l) {
         lines.push(l);
       }
 
-      var ring = utils.linesRing(100);
+      const ring = utils.linesRing(100);
       ring.callback(cb);
 
       ring.append('foo\nbar\nbaz');
@@ -187,16 +183,16 @@ describe('Utilities', function() {
       ring.get().should.equal('foo\nbar\nbaz');
     });
 
-    it('should limit lines', function() {
-      var ring = utils.linesRing(2);
+    it('should limit lines', () => {
+      const ring = utils.linesRing(2);
       ring.append('foo\nbar\nbaz');
       ring.get().should.equal('bar\nbaz');
       ring.append('foo\nbar');
       ring.get().should.equal('bazfoo\nbar');
     });
 
-    it('should allow unlimited lines', function() {
-      var ring = utils.linesRing(0);
+    it('should allow unlimited lines', () => {
+      const ring = utils.linesRing(0);
       ring.append('foo\nbar\nbaz');
       ring.get().should.equal('foo\nbar\nbaz');
       ring.append('foo\nbar');

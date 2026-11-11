@@ -1,16 +1,16 @@
-var ffmpeg = require('fluent-ffmpeg');
+import ffmpeg from '../index.js';
 
 // make sure you set the correct path to your video file
-var proc = ffmpeg('/path/to/your_image.jpg')
+const proc = ffmpeg('/path/to/your_image.jpg')
   // loop for 5 seconds
   .loop(5)
   // using 25 fps
   .fps(25)
   // setup event handlers
-  .on('end', function() {
+  .on('end', () => {
     console.log('file has been converted succesfully');
   })
-  .on('error', function(err) {
+  .on('error', (err) => {
     console.log('an error happened: ' + err.message);
   })
   // save to file

@@ -1,4 +1,4 @@
-exports.load = function(ffmpeg) {
+export function load(ffmpeg) {
   ffmpeg
     .toFormat('m4v')
     .withVideoBitrate('512k')
@@ -11,4 +11,4 @@ exports.load = function(ffmpeg) {
       '+mixed_refs', '-me_method umh', '-subq 5', '-bufsize 2M', '-rc_eq \'blurCplx^(1-qComp)\'',
       '-qcomp 0.6', '-qmin 10', '-qmax 51', '-qdiff 4', '-level 13' ]);
   return ffmpeg;
-};
+}

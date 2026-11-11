@@ -1,6 +1,3 @@
-/*jshint node:true*/
-'use strict';
-
 import { platform } from 'os';
 
 export const TestHelpers = {
