@@ -43,6 +43,24 @@ git submodule add git://github.com/schaermu/node-fluent-ffmpeg.git vendor/fluent
 
 You will find a lot of usage examples (including a real-time streaming example using [flowplayer](http://www.flowplayer.org) and [express](https://github.com/visionmedia/express)!) in the `examples` folder.
 
+## 💡 TypeScript Support
+
+This package ships with first-class TypeScript support:
+
+- ✅ Full type definitions for `FfmpegCommand`, all fluent methods (`videoCodec`, `format`, `save`, etc.), events, and static helpers (`availableFilters`, `ffprobe`, etc.)
+- ✅ ESM-ready: `import ffmpeg from 'fluent-ffmpeg'` works out of the box
+- ✅ Zero-config: no `tsconfig.json` or build step required — types are embedded and self-contained
+
+```ts
+import ffmpeg from 'fluent-ffmpeg';
+
+const cmd = ffmpeg('/input.mp4')
+  .videoCodec('libx264')
+  .on('end', () => console.log('Done!'));
+```
+
+> 💡 Tip: VS Code will provide autocompletion and type checking instantly. No extra setup needed.
+
 
 ### Prerequisites
 
@@ -337,7 +355,7 @@ ffmpeg('/path/to/file.avi')
       filter: 'silencedetect',
       options: { n: '-50dB', d: 5 }
     }
-  ]);
+  );
 ```
 
 
@@ -1038,7 +1056,7 @@ The `filename` option specifies a filename pattern for generated files.  It may 
 * '%r': screenshot resolution (same as '%wx%h')
 * '%f': input filename
 * '%b': input basename (filename w/o extension)
-* '%i': index of screenshot in timemark array (can be zero-padded by using it like `%000i`)
+* '%i': index of screenshot in timemark array (can be zero-padded by using it like '%000i')
 
 If multiple timemarks are passed and no variable format token ('%s' or '%i') is specified in the filename pattern, `_%i` will be added automatically.
 
@@ -1420,85 +1438,3 @@ command.save('/path/to/output-original-size.mp4');
 ```
 
 
-## Contributing
-
-Contributions in any form are highly encouraged and welcome! Be it new or improved presets, optimized streaming code or just some cleanup. So start forking!
-
-### Code contributions
-
-If you want to add new features or change the API, please submit an issue first to make sure no one else is already working on the same thing and discuss the implementation and API details with maintainers and users by creating an issue.  When everything is settled down, you can submit a pull request.
-
-When fixing bugs, you can directly submit a pull request.
-
-Make sure to add tests for your features and bugfixes and update the documentation (see below) before submitting your code!
-
-### Documentation contributions
-
-You can directly submit pull requests for documentation changes.  Make sure to regenerate the documentation before submitting (see below).
-
-### Updating the documentation
-
-When contributing API changes (new methods for example), be sure to update the README file and JSDoc comments in the code.  fluent-ffmpeg comes with a plugin that enables two additional JSDoc tags:
-
-* `@aliases`: document method aliases
-
-```js
-/**
- * ...
- * @method FfmpegCommand#myMethod
- * @aliases myMethodAlias,myOtherMethodAlias
- */
-```
-
-* `@category`: set method category
-
-```js
-/**
- * ...
- * @category Audio
- */
-```
-
-You can regenerate the JSDoc documentation by running the following command:
-
-```sh
-$ make doc
-```
-
-To avoid polluting the commit history, make sure to only commit the regenerated JSDoc once and in a specific commit.
-
-### Running tests
-
-To run unit tests, first make sure you installed npm dependencies (run `npm install`).
-
-```sh
-$ make test
-```
-
-Make sure your ffmpeg installation is up-to-date to prevent strange assertion errors because of missing codecs/bugfixes.
-
-## Main contributors
-
-* [enobrev](http://github.com/enobrev)
-* [njoyard](http://github.com/njoyard)
-* [sadikzzz](http://github.com/sadikzzz)
-* [smremde](http://github.com/smremde)
-* [spruce](http://github.com/spruce)
-* [tagedieb](http://github.com/tagedieb)
-* [tommadema](http://github.com/tommadema)
-* [Weltschmerz](http://github.com/Weltschmerz)
-
-## License
-
-(The MIT License)
-
-Copyright (c) 2011 Stefan Schaermeli &lt;schaermu@gmail.com&gt;
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the 'Software'), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-
-[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Ffluent-ffmpeg%2Fnode-fluent-ffmpeg.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Ffluent-ffmpeg%2Fnode-fluent-ffmpeg?ref=badge_large)
