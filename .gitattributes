@@ -1,4 +1,0 @@
-*.d.ts linguist-language=TypeScript
-*.js linguist-language=JavaScript
-*.mjs linguist-language=JavaScript
-*.json linguist-language=JSON
