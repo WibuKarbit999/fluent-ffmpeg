@@ -1,6 +1,6 @@
 {
   "name": "fluent-ffmpeg",
-  "version": "1.0.1",
+  "version": "1.0.0",
   "description": "A fluent API to FFMPEG (http://www.ffmpeg.org) — modern ESM fork",
   "author": {
     "name": "WibuKarbit999",
