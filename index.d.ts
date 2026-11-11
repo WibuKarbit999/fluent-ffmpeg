@@ -1,4 +1,5 @@
 /**
+ * 🗿
  * Type definitions for fluent-ffmpeg (ESM modern fork)
  * @module fluent-ffmpeg
  */
