@@ -21,16 +21,16 @@ This library abstracts the complex command-line usage of ffmpeg into a fluent, e
 Via npm:
 
 ```sh
-npm install fluent-ffmpeg
+npm install @wibukarbitt/fluent-ffmpeg
 ```
 
 This package is **ESM-only** and requires Node.js >= 18. Use `import` instead of `require()`:
 
 ```js
-import ffmpeg from 'fluent-ffmpeg';
+import ffmpeg from '@wibukarbitt/fluent-ffmpeg';
 ```
 
-If your project still uses CommonJS, load it with a dynamic import: `const { default: ffmpeg } = await import('fluent-ffmpeg');`
+If your project still uses CommonJS, load it with a dynamic import: `const { default: ffmpeg } = await import('@wibukarbitt/fluent-ffmpeg');`
 
 Or as a submodule:
 ```sh
@@ -52,7 +52,7 @@ This package ships with first-class TypeScript support:
 - ✅ Zero-config: no `tsconfig.json` or build step required — types are embedded and self-contained
 
 ```ts
-import ffmpeg from 'fluent-ffmpeg';
+import ffmpeg from '@wibukarbitt/fluent-ffmpeg';
 
 const cmd = ffmpeg('/input.mp4')
   .videoCodec('libx264')
@@ -90,7 +90,7 @@ Alternatively, you may set the ffmpeg, ffprobe and flvtool2/flvmeta binary paths
 The fluent-ffmpeg module returns a constructor that you can use to instanciate FFmpeg commands.
 
 ```js
-import FfmpegCommand from 'fluent-ffmpeg';
+import FfmpegCommand from '@wibukarbitt/fluent-ffmpeg';
 
 const command = new FfmpegCommand();
 ```
@@ -98,7 +98,7 @@ const command = new FfmpegCommand();
 You can also use the constructor without the `new` operator.
 
 ```js
-import ffmpeg from 'fluent-ffmpeg';
+import ffmpeg from '@wibukarbitt/fluent-ffmpeg';
 
 const command = ffmpeg();
 ```
