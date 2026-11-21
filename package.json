@@ -1,35 +1,49 @@
 {
-  "name": "fluent-ffmpeg",
-  "version": "1.0.0",
-  "description": "A fluent API to FFMPEG (http://www.ffmpeg.org) — modern ESM fork",
+  "name": "@wibukarbitt/fluent-ffmpeg",
+  "version": "1.1.0",
+  "description": "A fluent API to FFMPEG (http://www.ffmpeg.org) — modern ESM, CommonJS & TypeScript fork",
   "author": {
     "name": "WibuKarbit999",
     "url": "https://github.com/WibuKarbit999"
   },
   "license": "MIT",
   "type": "module",
-  "main": "index.js",
-  "types": "index.d.ts",
+  "main": "./dist/index.cjs",
+  "module": "./index.js",
+  "types": "./index.d.ts",
   "exports": {
     ".": {
-      "types": "./index.d.ts",
-      "import": "./index.js",
-      "default": "./index.js"
+      "import": {
+        "types": "./index.d.ts",
+        "default": "./index.js"
+      },
+      "require": {
+        "types": "./index.d.cts",
+        "default": "./dist/index.cjs"
+      }
     },
     "./package.json": "./package.json"
   },
   "files": [
     "lib/",
+    "dist/",
     "index.js",
-    "index.d.ts"
+    "index.d.ts",
+    "index.d.cts"
   ],
   "engines": {
     "node": ">=18"
   },
   "scripts": {
+    "build": "node scripts/build-cjs.mjs",
+    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.cjs.json",
     "test": "NODE_ENV=test mocha --require should --reporter spec",
+    "test:all": "npm run build && npm run typecheck && npm test",
     "test:coverage": "NODE_ENV=test nyc mocha --require should --reporter spec",
-    "docs": "jsdoc -c tools/jsdoc-conf.json"
+    "prepublishOnly": "npm run build && npm run typecheck"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "repository": {
     "type": "git",
@@ -41,9 +55,11 @@
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "esbuild": "^0.28.2",
     "jsdoc": "^4.0.4",
     "mocha": "^10.8.2",
     "nyc": "^17.1.0",
-    "should": "^13.2.3"
+    "should": "^13.2.3",
+    "typescript": "^7.0.2"
   }
 }
